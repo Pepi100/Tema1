@@ -1,12 +1,28 @@
 .data
 
 
-	sirb16: .space 100
-	sirb2: .space 400
+	sirb16: .space 101
+	sirb2: .space 402
+	sirrez: .space 402
 	formatscanf: .asciz "%s"
-	formatprintf: .asciz "%s\n"
+	formatprintf: .asciz "%s "
+	formatnewline: .asciz "\n"
 	
-	indexsirb2: .long 0 
+	div: .asciz "div"
+	add: .asciz "add"
+	mul: .asciz "mul"
+	sub: .asciz "sub"
+	let: .asciz "let"
+	
+	nrpozprint: .asciz "%d "
+	nrnegprint: .asciz "-%d "
+	variabila: .space 2
+	
+	nrneg: .long 0
+	
+	
+	indexsirb2: .long 0
+	indexsirrez: .long 0
 	
 .text
 
@@ -32,7 +48,7 @@ et_for:
 	
 	
 	cmp $0, %al
-	je et_exit
+	je et_interpretare
 	
 	cmp $48, %al
 	je et_cifra0
@@ -363,16 +379,376 @@ et_cifraf:
 	popl %ecx
 	jmp continuare
 
-
-
-et_exit:
+et_interpretare:
+	xorl %ecx, %ecx
+	movl $sirb2, %esi
+	movl $sirrez, %edi
+	movl %ecx, indexsirb2
 	
-	push $sirb2
+	
+et_fori:
+	
+	movb (%esi, %ecx, 1), %al
+	
+	cmp $0, %al 
+	je et_exit
+	
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	
+	cmp $49, %al
+	je et_operatie
+	
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	
+	cmp $49, %al
+	je et_variabila
+	jmp et_numar
+	
+	
+	
+et_continuarei:
+	
+	movl $12, %ebx
+	add %ebx, indexsirb2
+	movl indexsirb2, %ecx	
+	
+	jmp et_fori
+	
+	
+
+et_numar:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	
+	cmp $49, %al
+	je et_nrneg
+	jmp et_nrpoz
+	
+et_nrneg:
+	pushl %ecx
+	mov $1, %ecx
+	mov %ecx, nrneg
+	popl %ecx
+	
+	
+et_nrpoz:
+	xorl %ebx, %ebx
+	
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je add128
+rep128:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je add64
+rep64:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je add32
+rep32:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je add16
+rep16:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je add8
+rep8:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je add4
+rep4:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je add2
+rep2:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je add1
+rep1:
+	
+	push %ecx
+	mov nrneg, %ecx
+	cmp $1, %ecx
+	je afisneg
+	jmp afispoz
+	
+afispoz:
+	popl %ecx	
+	push %ebx
+	push $nrpozprint
+	call printf
+	popl %ebx
+	popl %ebx
+	
+	pushl $0
+	call fflush
+	popl %ebx
+	
+	jmp et_continuarei
+
+afisneg:
+	popl %ecx	
+	push %ebx
+	push $nrnegprint
+	call printf
+	popl %ebx
+	popl %ebx
+	
+	pushl $0
+	call fflush
+	popl %ebx
+	
+	mov $0, %ecx
+	mov %ecx, nrneg
+	
+	jmp et_continuarei
+	
+	
+	
+add128:
+	add $128, %ebx
+	jmp rep128
+add64:
+	add $64, %ebx
+	jmp rep64
+add32:
+	add $32, %ebx
+	jmp rep32
+add16:
+	add $16, %ebx
+	jmp rep16
+add8:
+	add $8, %ebx
+	jmp rep8
+add4:
+	add $4, %ebx
+	jmp rep4
+add2:
+	add $2, %ebx
+	jmp rep2
+add1:
+	add $1, %ebx
+	jmp rep1
+
+
+		
+	
+
+et_variabila:
+	incl %ecx
+	xorl %ebx, %ebx
+	
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je vadd128
+vrep128:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je vadd64
+vrep64:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je vadd32
+vrep32:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je vadd16
+vrep16:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je vadd8
+vrep8:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je vadd4
+vrep4:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je vadd2
+vrep2:
+	incl %ecx 
+	movb (%esi, %ecx, 1), %al
+	cmp $49, %al
+	je vadd1
+vrep1:
+	pushl %ecx
+	movl $0, %ecx
+	mov $variabila, %edi
+
+	movb %bl, (%edi, %ecx, 1)
+	incl %ecx
+	//movb $0, (%edi, %ecx, 1)
+	popl %ecx
+	
+	
+	push %edi
 	push $formatprintf
 	call printf
 	popl %ebx
 	popl %ebx
 
+	jmp et_continuarei
+	
+vadd128:
+	add $128, %ebx
+	jmp vrep128
+vadd64:
+	add $64, %ebx
+	jmp vrep64
+vadd32:
+	add $32, %ebx
+	jmp vrep32
+vadd16:
+	add $16, %ebx
+	jmp vrep16
+vadd8:
+	add $8, %ebx
+	jmp vrep8
+vadd4:
+	add $4, %ebx
+	jmp vrep4
+vadd2:
+	add $2, %ebx
+	jmp vrep2
+vadd1:
+	add $1, %ebx
+	jmp vrep1
+
+	
+
+	
+	
+et_operatie:
+	add $8, %ecx 
+	movb (%esi, %ecx, 1), %al
+	
+	cmp $49, %al 
+	je et_div
+	
+	incl %ecx
+	movb (%esi, %ecx, 1), %al
+	
+	cmp $49, %al
+	je et_mulsub
+	
+	incl %ecx
+	movb (%esi, %ecx, 1), %al
+	
+	cmp $49, %al
+	je et_add
+	
+	jmp et_let
+	
+	jmp et_continuarei
+	
+	
+et_mulsub:
+	incl %ecx
+	movb (%esi, %ecx, 1), %al
+	
+	cmp $49, %al
+	je et_mul
+	jmp et_sub
+	
+	
+et_mul:
+	push $mul
+	push $formatprintf
+	call printf
+	popl %ebx
+	popl %ebx
+	
+	pushl $0
+	call fflush
+	popl %ebx
+	
+	
+	jmp et_continuarei
+
+et_sub:
+	push $sub
+	push $formatprintf
+	call printf
+	popl %ebx
+	popl %ebx
+	
+	pushl $0
+	call fflush
+	popl %ebx
+	
+	
+	jmp et_continuarei
+	
+et_add:
+	push $add
+	push $formatprintf
+	call printf
+	popl %ebx
+	popl %ebx
+	
+	pushl $0
+	call fflush
+	popl %ebx
+	
+	
+	jmp et_continuarei
+
+et_div:
+	
+	push $div
+	push $formatprintf
+	call printf
+	popl %ebx
+	popl %ebx
+	
+	pushl $0
+	call fflush
+	popl %ebx
+	
+	
+	jmp et_continuarei
+	
+et_let:
+	push $let
+	push $formatprintf
+	call printf
+	popl %ebx
+	popl %ebx
+	
+	pushl $0
+	call fflush
+	popl %ebx
+	
+	
+	jmp et_continuarei
+	
+	
+	
+
+
+
+et_exit:
+	push $formatnewline
+	call printf
+	popl %ebx
 
 	movl $1, %eax
 	xorl %ebx, %ebx
